@@ -1,37 +1,49 @@
-resource "aws_lb" "web_srv" {
-    name = "alb-by-tf"
-    load_balancer_type = "application"
-    subnets = var.vpc_subnet_ids
-    security_groups = [ var.secgrp_alb_id ]
+# ALB primary setting
+resource "aws_lb" "primary_setting" {
+  name = "${var.aws_installation_name}-lb"
+  internal = false
+  enable_deletion_protection = false
+  load_balancer_type = "application"
+  security_groups = [ var.internal_security_group_alb_cf_access_id ]
+  subnets = var.internal_subnet_public_id
+
+  tags = {
+    Name = "${var.aws_installation_name}-lb-primary-setting"
+  }
 }
 
-resource "aws_lb_listener" "web_srv" {
-  load_balancer_arn = aws_lb.web_srv.arn
+# ALB target group for web server
+resource "aws_lb_target_group" "websrv" {
+  name = "${var.aws_installation_name}-lb-target-group-websrv"
+  port = 80
+  protocol = "HTTP"
+  vpc_id = var.internal_vpc_primary_setting_id
+
+  health_check {
+    enabled = true
+    healthy_threshold = 2
+    interval = 30
+    matcher = "200"
+    path = "/"
+    port = "traffic-port"
+    protocol = "HTTP"
+    timeout = 5
+    unhealthy_threshold = 2
+  }
+
+  tags = {
+    Name = "${var.aws_installation_name}-lb-target-group-websrv"
+  }
+}
+
+# ALB listener for HTTP
+resource "aws_lb_listener" "websrv_http" {
+  load_balancer_arn = aws_lb.primary_setting.arn
   port = 80
   protocol = "HTTP"
 
   default_action {
-    type = "fixed-response"
-
-    fixed_response {
-        content_type = "text/plain"
-        message_body = "404: page not found"
-        status_code = 404
-    }
-  }
-}
-
-resource "aws_lb_listener_rule" "web_srv" {
-  listener_arn = aws_lb_listener.web_srv.arn
-  priority = 100
-
-  condition {
-    path_pattern {
-        values = ["*"]
-    }
-  }
-  action {
     type = "forward"
-    target_group_arn = var.targrp_websrv_arn
+    target_group_arn = aws_lb_target_group.websrv.arn
   }
 }

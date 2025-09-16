@@ -10,49 +10,95 @@ terraform {
 # Provider and AWS region
 provider "aws" {
   region = var.aws_region
-  access_key = var.access_key
-  secret_key = var.secret_key
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
 }
 
-# Module for AWS VPC
-module "vpc" {
-  source = "./modules/vpc"
-  server_port = var.server_port
+# Module for AWS network settings
+module "network" {
+  source = "./modules/network"
+  aws_vpc_cidr = var.aws_vpc_cidr
+  aws_installation_name = var.aws_installation_name
+  aws_az_list = var.aws_az_list
 }
 
-# Sleep after creation of AWS VPC
-resource "time_sleep" "wait_after_vpc" {
-  depends_on      = [module.vpc]
+# Module for AWS S3
+module "storage" {
+  source = "./modules/storage"
+  depends_on = [ module.network ]
+  aws_installation_name = var.aws_installation_name
+}
+
+# Sleep after creation of AWS network
+resource "time_sleep" "wait_after_network" {
+  depends_on      = [ module.storage ]
   create_duration = var.sleeping_time
 }
 
-# Module for AWS AMI creation
-module "srv_image" {
-  depends_on = [time_sleep.wait_after_vpc]
-  source     = "./modules/srv_image"
-  server_port = var.server_port
+# Module for AWS security groups and IAM
+module "security" {
+  source = "./modules/security"
+  depends_on = [ time_sleep.wait_after_network ]
+  aws_vpc_cidr = var.aws_vpc_cidr
+  aws_installation_name = var.aws_installation_name
+  internal_vpc_primary_setting_id = module.network.internal_vpc_primary_setting_id
+  internal_s3_bucket_primary_storage_arn = module.storage.internal_s3_bucket_primary_storage_arn
 }
 
-# Sleep after creation of AWS AMI
-resource "time_sleep" "wait_after_ami" {
-  depends_on      = [module.srv_image]
-  create_duration = var.sleeping_time
-}
-
-module "autoscaling_group" {
-  depends_on   = [time_sleep.wait_after_ami]
-  source       = "./modules/autoscaling_group"
-  asg_min_size = var.asg_min_size
-  asg_max_size = var.asg_max_size
-  launch_template_srv_image_id = module.srv_image.launch_template_srv_image_id
-  targrp_websrv_arn = module.vpc.targrp_websrv_arn
-  vpc_subnet_ids = module.vpc.vpc_subnet_ids
-}
-
+# Module for AWS application load balancer
 module "loadbalancer" {
-  depends_on = [ module.autoscaling_group ]
   source = "./modules/loadbalancer"
-  vpc_subnet_ids = module.vpc.vpc_subnet_ids
-  secgrp_alb_id = module.vpc.secgrp_alb_id
-  targrp_websrv_arn = module.vpc.targrp_websrv_arn
+  depends_on = [ module.security ]
+  aws_installation_name = var.aws_installation_name
+  internal_vpc_primary_setting_id = module.network.internal_vpc_primary_setting_id
+  internal_security_group_alb_cf_access_id = module.security.internal_security_group_alb_cf_access_id
+  internal_subnet_public_id = module.network.internal_subnet_public_id
+}
+
+# Sleep after creation of AWS application load balancer
+resource "time_sleep" "wait_after_loadbalancer" {
+  depends_on      = [ module.loadbalancer ]
+  create_duration = var.sleeping_time
+}
+
+# Module for AWS EC2 instances
+module "server" {
+  source = "./modules/server"
+  depends_on = [ time_sleep.wait_after_loadbalancer ]
+  aws_installation_name = var.aws_installation_name
+  aws_instance_type = var.aws_instance_type
+  internal_security_group_websrv_access_id = module.security.internal_security_group_websrv_access_id
+  internal_subnet_private_id = module.network.internal_subnet_private_id
+  internal_lb_target_group_websrv_arn = module.loadbalancer.internal_lb_target_group_websrv_arn
+  internal_s3_bucket_primary_storage_name = module.storage.internal_s3_bucket_primary_storage_name
+  internal_iam_instance_profile_server_name = module.security.internal_iam_instance_profile_server_name
+}
+
+# Sleep after creation of AWS EC2 instances
+resource "time_sleep" "wait_after_server" {
+  depends_on      = [ module.server ]
+  create_duration = var.sleeping_time
+}
+
+# Module for AWS cloud front
+module "cdn" {
+  source = "./modules/cdn"
+  depends_on = [ time_sleep.wait_after_server ]
+  aws_installation_name = var.aws_installation_name
+  internal_lb_primary_setting_name = module.loadbalancer.internal_lb_primary_setting_name
+  internal_lb_primary_setting_dns_name = module.loadbalancer.internal_lb_primary_setting_dns_name
+  internal_s3_bucket_primary_storage_id = module.storage.internal_s3_bucket_primary_storage_id
+  internal_s3_bucket_primary_storage_arn = module.storage.internal_s3_bucket_primary_storage_arn
+  internal_s3_bucket_primary_storage_regional_domain_name = module.storage.internal_s3_bucket_primary_storage_regional_domain_name
+  internal_iam_role_server_storage_arn = module.security.internal_iam_role_server_storage_arn
+}
+
+# Module for AWS cloud watch
+module "monitoring" {
+  source = "./modules/monitoring"
+  depends_on = [ module.cdn ]
+  aws_installation_name = var.aws_installation_name
+  internal_autoscaling_policy_up_arn = module.server.internal_autoscaling_policy_up_arn
+  internal_autoscaling_policy_down_arn = module.server.internal_autoscaling_policy_down_arn
+  internal_autoscaling_group_websrv_name = module.server.internal_autoscaling_group_websrv_name
 }

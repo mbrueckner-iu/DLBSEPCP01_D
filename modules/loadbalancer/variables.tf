@@ -1,3 +1,4 @@
-variable "vpc_subnet_ids" {}
-variable "secgrp_alb_id" {}
-variable "targrp_websrv_arn" {}
+variable "aws_installation_name" {}
+variable "internal_vpc_primary_setting_id" {}
+variable "internal_security_group_alb_cf_access_id" {}
+variable "internal_subnet_public_id" {}
