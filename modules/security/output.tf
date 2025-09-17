@@ -1,5 +1,10 @@
-output "internal_security_group_alb_cf_access_id" {
-    value = aws_security_group.alb_cf_access.id
+output "internal_security_group_alb_cf_access_80_id" {
+    value = aws_security_group.alb_cf_access_80.id
+    sensitive = true
+}
+
+output "internal_security_group_alb_cf_access_443_id" {
+    value = aws_security_group.alb_cf_access_443.id
     sensitive = true
 }
 

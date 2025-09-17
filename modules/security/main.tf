@@ -1,6 +1,11 @@
+# Cloud front IP lists
+data "aws_ec2_managed_prefix_list" "cloudfront" {
+  name = "com.amazonaws.global.cloudfront.origin-facing"
+}
+
 # Security group for application load balancer
-resource "aws_security_group" "alb_cf_access" {
-  name = "${var.aws_installation_name}-alb-cf-access"
+resource "aws_security_group" "alb_cf_access_80" {
+  name = "${var.aws_installation_name}-alb-cf-access-80"
   description = "Cloud front access"
   vpc_id = var.internal_vpc_primary_setting_id
 
@@ -8,32 +13,7 @@ resource "aws_security_group" "alb_cf_access" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    cidr_blocks = [
-      "54.230.0.0/16",
-      "54.239.128.0/18",
-      "54.240.128.0/18",
-      "99.84.0.0/16",
-      "130.176.0.0/16",
-      "13.32.0.0/15",
-      "54.182.0.0/16",
-      "54.192.0.0/16"
-    ]
-  }
-
-  ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = [
-      "54.230.0.0/16",
-      "54.239.128.0/18",
-      "54.240.128.0/18",
-      "99.84.0.0/16",
-      "130.176.0.0/16",
-      "13.32.0.0/15",
-      "54.182.0.0/16",
-      "54.192.0.0/16"
-    ]
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
   }
 
   egress {
@@ -44,7 +24,31 @@ resource "aws_security_group" "alb_cf_access" {
   }
 
   tags = {
-    Name = "${var.aws_installation_name}-security-group-alb-cf-access"
+    Name = "${var.aws_installation_name}-security-group-alb-cf-access-80"
+  }
+}
+
+resource "aws_security_group" "alb_cf_access_443" {
+  name = "${var.aws_installation_name}-alb-cf-access-443"
+  description = "Cloud front access"
+  vpc_id = var.internal_vpc_primary_setting_id
+
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+
+  tags = {
+    Name = "${var.aws_installation_name}-security-group-alb-cf-access-443"
   }
 }
 
@@ -65,7 +69,7 @@ resource "aws_security_group" "websrv_access" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    security_groups = [ aws_security_group.alb_cf_access.id ]
+    security_groups = [ aws_security_group.alb_cf_access_80.id, aws_security_group.alb_cf_access_443.id ]
   }
 
   egress {

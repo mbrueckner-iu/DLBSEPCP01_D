@@ -4,7 +4,7 @@ resource "aws_lb" "primary_setting" {
   internal = false
   enable_deletion_protection = false
   load_balancer_type = "application"
-  security_groups = [ var.internal_security_group_alb_cf_access_id ]
+  security_groups = [ var.internal_security_group_alb_cf_access_80_id, var.internal_security_group_alb_cf_access_443_id ]
   subnets = var.internal_subnet_public_id
 
   tags = {

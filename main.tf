@@ -51,7 +51,8 @@ module "loadbalancer" {
   depends_on = [ module.security ]
   aws_installation_name = var.aws_installation_name
   internal_vpc_primary_setting_id = module.network.internal_vpc_primary_setting_id
-  internal_security_group_alb_cf_access_id = module.security.internal_security_group_alb_cf_access_id
+  internal_security_group_alb_cf_access_80_id = module.security.internal_security_group_alb_cf_access_80_id
+  internal_security_group_alb_cf_access_443_id = module.security.internal_security_group_alb_cf_access_443_id
   internal_subnet_public_id = module.network.internal_subnet_public_id
 }
 
