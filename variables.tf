@@ -43,3 +43,9 @@ variable "sleeping_time" {
   type        = string
   default     = "30s"
 }
+
+variable "monitoring_alarm_mail_addresses" {
+  description = ""
+  type = list(string)
+  default = [ "max.brueckner@iu-study.org" ]
+}

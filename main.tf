@@ -98,7 +98,11 @@ module "monitoring" {
   source = "./modules/monitoring"
   depends_on = [ module.cdn ]
   aws_installation_name = var.aws_installation_name
+  aws_region = var.aws_region
+  monitoring_alarm_mail_addresses = var.monitoring_alarm_mail_addresses
   internal_autoscaling_policy_up_arn = module.server.internal_autoscaling_policy_up_arn
   internal_autoscaling_policy_down_arn = module.server.internal_autoscaling_policy_down_arn
   internal_autoscaling_group_websrv_name = module.server.internal_autoscaling_group_websrv_name
+  internal_cloudfront_distribution_primary_setting_dns_name = module.cdn.internal_cloudfront_distribution_primary_setting_dns_name
+  internal_lb_primary_setting_dns_name = module.loadbalancer.internal_lb_primary_setting_dns_name
 }
