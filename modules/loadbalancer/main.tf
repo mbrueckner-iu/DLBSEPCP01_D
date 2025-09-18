@@ -6,10 +6,6 @@ resource "aws_lb" "primary_setting" {
   load_balancer_type = "application"
   security_groups = [ var.internal_security_group_alb_cf_access_80_id, var.internal_security_group_alb_cf_access_443_id ]
   subnets = var.internal_subnet_public_id
-
-  tags = {
-    Name = "${var.aws_installation_name}-lb-primary-setting"
-  }
 }
 
 # ALB target group for web server
@@ -29,10 +25,6 @@ resource "aws_lb_target_group" "websrv" {
     protocol = "HTTP"
     timeout = 5
     unhealthy_threshold = 2
-  }
-
-  tags = {
-    Name = "${var.aws_installation_name}-lb-target-group-websrv"
   }
 }
 

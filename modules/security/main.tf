@@ -22,10 +22,6 @@ resource "aws_security_group" "alb_cf_access_80" {
     protocol = "-1"
     cidr_blocks = [ "0.0.0.0/0" ]
   }
-
-  tags = {
-    Name = "${var.aws_installation_name}-security-group-alb-cf-access-80"
-  }
 }
 
 resource "aws_security_group" "alb_cf_access_443" {
@@ -45,10 +41,6 @@ resource "aws_security_group" "alb_cf_access_443" {
     to_port = 0
     protocol = "-1"
     cidr_blocks = [ "0.0.0.0/0" ]
-  }
-
-  tags = {
-    Name = "${var.aws_installation_name}-security-group-alb-cf-access-443"
   }
 }
 
@@ -78,10 +70,6 @@ resource "aws_security_group" "websrv_access" {
     protocol = "-1"
     cidr_blocks = [ "0.0.0.0/0" ]
   }
-
-  tags = {
-    Name = "${var.aws_installation_name}-security-group-websrv-access"
-  }
 }
 
 # IAM role for server to storage
@@ -97,10 +85,6 @@ resource "aws_iam_role" "server_storage" {
       }
     }]
   })
-
-  tags = {
-    Name = "${var.aws_installation_name}-iam-role-server-storage"
-  }
 }
 
 # IAM policy for server to storage
@@ -139,8 +123,4 @@ resource "aws_iam_role_policy" "server_storage" {
 resource "aws_iam_instance_profile" "server" {
   name = "${var.aws_installation_name}-server-profile"
   role = aws_iam_role.server_storage.name
-
-  tags = {
-    Name = "${var.aws_installation_name}-iam-instance-profile-server"
-  }
 }

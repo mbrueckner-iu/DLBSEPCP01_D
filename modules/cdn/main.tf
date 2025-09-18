@@ -68,10 +68,6 @@ resource "aws_cloudfront_distribution" "primary_setting" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-
-  tags = {
-    Name = "${var.aws_installation_name}-cloudfront-distribution-primary-setting"
-  }
 }
 
 # Cloud front S3 access policy

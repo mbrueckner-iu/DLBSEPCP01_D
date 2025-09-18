@@ -34,10 +34,6 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
 # Alarm notification
 resource "aws_sns_topic" "health_check_alarm" {
   name = "${var.aws_installation_name}-health-check-alarm"
-
-  tags = {
-    Name = "${var.aws_installation_name}-sns-health-check-alarm"
-  }
 }
 
 resource "aws_sns_topic_subscription" "mail_alert" {
@@ -58,10 +54,6 @@ resource "aws_route53_health_check" "cf_alarm" {
   cloudwatch_alarm_region = var.aws_region
   cloudwatch_alarm_name = "${var.aws_installation_name}-cf-alarm"
   insufficient_data_health_status = "Unhealthy"
-
-  tags = {
-    Name = "${var.aws_installation_name}-route53-health-check-cf-alarm"
-  }
 }
 
 # Route53 alarm notification
@@ -78,10 +70,9 @@ resource "aws_cloudwatch_metric_alarm" "route53_cf_alarm" {
   alarm_actions = [ aws_sns_topic.health_check_alarm.arn ]
   ok_actions = [ aws_sns_topic.health_check_alarm.arn ]
   treat_missing_data = "breaching"
+  depends_on = [aws_route53_health_check.cf_alarm]
 
   dimensions = {
     HealthCheckId = aws_route53_health_check.cf_alarm.id
-  }
-
-  depends_on = [aws_route53_health_check.cf_alarm]
+  }  
 }

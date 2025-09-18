@@ -20,13 +20,6 @@ resource "aws_launch_template" "websrv" {
               systemctl restart httpd
               EOF
   )
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = {
-      Name = "${var.aws_installation_name}-launch-template-websrv"
-    }
-  }
 }
 
 # Auto scaling group
@@ -36,19 +29,13 @@ resource "aws_autoscaling_group" "websrv" {
   target_group_arns = [ var.internal_lb_target_group_websrv_arn ]
   health_check_type = "ELB"
   health_check_grace_period = 300
-  min_size = 2
-  max_size = 10
+  min_size = var.aws_instance_type_min_size
+  max_size = var.aws_instance_type_max_size
   desired_capacity = 2
 
   launch_template {
     id = aws_launch_template.websrv.id
     version = "$Latest"
-  }
-
-  tag {
-    key = "Name"
-    value = "${var.aws_installation_name}-autoscaling-group-websrv"
-    propagate_at_launch = false
   }
 }
 
@@ -76,6 +63,6 @@ data "aws_ami" "linux_amazon" {
 
   filter {
     name = "name"
-    values = [ "amzn2-ami-hvm-*-x86_64-gp2" ]
+    values = [ var.aws_instance_type_ami_image ]
   }
 }

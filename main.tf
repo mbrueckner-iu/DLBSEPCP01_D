@@ -12,6 +12,16 @@ provider "aws" {
   region = var.aws_region
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
+
+  default_tags {
+    tags = {
+      Project     = var.aws_installation_name
+      Environment = var.aws_installation_environment
+      ManagedBy   = var.aws_installation_managed_by
+      Owner       = var.aws_installation_owner
+      CreatedDate = formatdate("YYYY-MM-DD", timestamp())
+    }
+  }
 }
 
 # Module for AWS network settings
@@ -25,7 +35,7 @@ module "network" {
 # Module for AWS S3
 module "storage" {
   source = "./modules/storage"
-  depends_on = [ module.network ]
+  #depends_on = [ module.network ]
   aws_installation_name = var.aws_installation_name
 }
 
@@ -68,6 +78,9 @@ module "server" {
   depends_on = [ time_sleep.wait_after_loadbalancer ]
   aws_installation_name = var.aws_installation_name
   aws_instance_type = var.aws_instance_type
+  aws_instance_type_min_size = var.aws_instance_type_min_size
+  aws_instance_type_max_size = var.aws_instance_type_max_size
+  aws_instance_type_ami_image = var.aws_instance_type_ami_image
   internal_security_group_websrv_access_id = module.security.internal_security_group_websrv_access_id
   internal_subnet_private_id = module.network.internal_subnet_private_id
   internal_lb_target_group_websrv_arn = module.loadbalancer.internal_lb_target_group_websrv_arn

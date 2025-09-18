@@ -1,3 +1,8 @@
+output "application_url" {
+  value       = "https://${module.cdn.internal_cloudfront_distribution_primary_setting_dns_name}"
+  description = "Main access via Cloud front"
+}
+
 output "vpc_id" {
     value = module.network.internal_vpc_primary_setting_id
     description = ""
