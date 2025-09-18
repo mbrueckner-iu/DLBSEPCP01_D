@@ -31,6 +31,22 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
   }
 }
 
+# Alarm notification
+resource "aws_sns_topic" "health_check_alarm" {
+  name = "${var.aws_installation_name}-health-check-alarm"
+
+  tags = {
+    Name = "${var.aws_installation_name}-sns-health-check-alarm"
+  }
+}
+
+resource "aws_sns_topic_subscription" "mail_alert" {
+  count = length(var.monitoring_alarm_mail_addresses)
+  topic_arn = aws_sns_topic.health_check_alarm.arn
+  protocol = "email"
+  endpoint = var.monitoring_alarm_mail_addresses[count.index]
+}
+
 # Route53 alarms
 resource "aws_route53_health_check" "cf_alarm" {
   fqdn = var.internal_cloudfront_distribution_primary_setting_dns_name
@@ -48,18 +64,24 @@ resource "aws_route53_health_check" "cf_alarm" {
   }
 }
 
-# Alarm notification
-resource "aws_sns_topic" "health_check_alarm" {
-  name = "${var.aws_installation_name}-health-check-alarm"
+# Route53 alarm notification
+resource "aws_cloudwatch_metric_alarm" "route53_cf_alarm" {
+  alarm_name = "${var.aws_installation_name}-route53-cf-alarm"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods = 1
+  metric_name = "HealthCheckStatus"
+  namespace = "AWS/Route53"
+  period = 60
+  statistic = "Minimum"
+  threshold = 1
+  alarm_description = "CloudFront health check failed - DNS name offline"
+  alarm_actions = [ aws_sns_topic.health_check_alarm.arn ]
+  ok_actions = [ aws_sns_topic.health_check_alarm.arn ]
+  treat_missing_data = "breaching"
 
-  tags = {
-    Name = "${var.aws_installation_name}-sns-health-check-alarm"
+  dimensions = {
+    HealthCheckId = aws_route53_health_check.cf_alarm.id
   }
-}
 
-resource "aws_sns_topic_subscription" "mail_alert" {
-  count = length(var.monitoring_alarm_mail_addresses)
-  topic_arn = aws_sns_topic.health_check_alarm.arn
-  protocol = "email"
-  endpoint = var.monitoring_alarm_mail_addresses[count.index]
+  depends_on = [aws_route53_health_check.cf_alarm]
 }
