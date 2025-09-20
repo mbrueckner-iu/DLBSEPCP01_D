@@ -1,25 +1,25 @@
 variable "aws_installation_name" {
-  description = "Name of your AWS installation. Default: IU-CP"
+  description = "Name of your AWS installation. Default: iu-cp"
   type = string
   default = "iu-cp"
 }
 
 variable "aws_installation_environment" {
-  description = "Specify the environment. Default: test"
+  description = "Specify the environment, like dev, test, or prod. Default: test"
   type = string
   default = "test"
 }
 
 variable "aws_installation_managed_by" {
-  description = "Specify who is managing the installation. Default: Terraform"
+  description = "Specify who is managing the installation. Default: terraform"
   type = string
   default = "terraform"
 }
 
 variable "aws_installation_owner" {
-  description = "Specify who is the owner of the installation. Default: <empty>"
+  description = "Specify who is the owner of the installation. Default: john doe"
   type = string
-  default = "max brueckner"
+  default = "john doe"
 }
 
 variable "aws_region" {
@@ -81,7 +81,7 @@ variable "sleeping_time" {
 }
 
 variable "monitoring_alarm_mail_addresses" {
-  description = "Addresses used to sent notifications, if a service will fail. Default: <empty>"
+  description = "Addresses used to sent notifications, if a service will fail. Default: john.doe@example.com"
   type = list(string)
-  default = [ "max.brueckner@iu-study.org" ]
+  default = [ "john.doe@example.com" ]
 }
