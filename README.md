@@ -21,7 +21,7 @@ Please store your credentials at a safe place. The script itself isn't a safe pl
 # How to use the Terraform scripts
 ## Variables
 In general there is no need to adjust any of the settings within the modules. If you are fine with the infrastructure setting of the scripts, you have to maintain the variables file of the root directory only. Please adjust them to your requirments.
-All variables beginning with *internal*** used for transferring values from one module to another.
+All variables beginning with _internal*_ used for transferring values from one module to another.
 
 ## Output
 The output file of the root directory will show important configuration values after the script was successfully applied.
@@ -32,4 +32,4 @@ You can easily run the script with following Terraform commands. For example in 
 - `terraform init`: This will initialize and prepare anything on your local environment to run the script.
 - `terraform validate`: Optional command. Just check if the script seems to be fine. If validation fails, I would appreciate, to get a note from you.
 - `terraform apply`: The script will create all resources on AWS. Please add your credentials and confirm the plan with typing *yes*. Please note, that from now on, costs will be charged by AWS.
-- `terraform destroy`: Important if you are running a test, on productive environments be careful. The command will disable and delete all resources on AWS. After this is successful finished, no further costs will be charged.
+- `terraform destroy`: Important if you are running a test, on productive environments be careful. The command will disable and delete all resources on AWS. Please add your credentials and confirm the plan with typing *yes*. After this is successful finished, no further costs will be charged.
